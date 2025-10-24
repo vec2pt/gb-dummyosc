@@ -179,32 +179,17 @@ void update(void) {
 void check_inputs(void) {
   update_keys();
 
-  // if (key_pressed(J_A)) {
-  //   printf("J_A");
-  // }
-  // if (key_ticked(J_B)) {
-  //   printf("J_B");
-  // }
-  // if (key_released(J_B)) {
-  //   printf("R");
-  // }
-  if (key_ticked(J_UP)) {
-    previous_frequency_index = frequency_index;
+  // Pitch
+  if (key_ticked(J_RIGHT)) {
     if (frequency_index < 71)
       frequency_index++;
-  }
-  if (key_ticked(J_DOWN)) {
-    previous_frequency_index = frequency_index;
+  } else if (key_ticked(J_LEFT)) {
     if (frequency_index > 0)
       frequency_index--;
-  }
-  if (key_ticked(J_RIGHT)) {
-    previous_frequency_index = frequency_index;
+  } else if (key_ticked(J_UP)) {
     if (frequency_index < 71 - 12)
       frequency_index += 12;
-  }
-  if (key_ticked(J_LEFT)) {
-    previous_frequency_index = frequency_index;
+  } else if (key_ticked(J_DOWN)) {
     if (frequency_index > 11)
       frequency_index -= 12;
   }
