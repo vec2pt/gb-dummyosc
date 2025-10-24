@@ -2,6 +2,7 @@
 #include <gbdk/console.h>
 #include <gbdk/font.h>
 #include <rand.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -28,6 +29,9 @@ void printn(uint16_t n) {
 
 uint8_t frequency_index = 12;
 uint8_t previous_frequency_index = 12; // TODO: Remove it?
+bool play = false;
+
+font_t font_norm, font_sel;
 
 // -----------------------------------------------------------------------------
 // Inputs
@@ -70,10 +74,7 @@ void sound_off(void) {
 // -----------------------------------------------------------------------------
 
 void play_sound(void) {
-  // TODO: Check regs
   NR30_REG = 0x00;
-  // NR32_REG = 0x40;
-  // NR31_REG = 0xFE;
   NR32_REG = 0x20;
 
   for (uint8_t i = 0; i < 16; i++)
@@ -129,6 +130,15 @@ void draw_osc(void) {
   }
 }
 
+void plot_osc(uint8_t x, uint8_t y) {
+  gotoxy(x, y);
+  for (uint8_t i = 0; i < 16; i++) {
+    printn(_wave[i]);
+    if (i == 7)
+      gotoxy(x, y + 1);
+  }
+}
+
 void draw(void) {
   set_tile_xy(1, 1, 0x62);
   for (uint8_t i = 0; i < 16; i++) {
@@ -153,6 +163,7 @@ void draw(void) {
 
 void update(void) {
   draw_osc();
+  plot_osc(2, 14);
 
   // TODO
   gotoxy(2, 11);
@@ -197,6 +208,17 @@ void check_inputs(void) {
     if (frequency_index > 11)
       frequency_index -= 12;
   }
+
+  // Start / stop play
+  else if (key_ticked(J_START)) {
+    play = !play;
+    if (play) {
+      sound_on();
+      play_sound();
+    } else {
+      sound_off();
+    }
+  }
 }
 
 void init(void) {
@@ -207,15 +229,12 @@ void init(void) {
   // SHOW_SPRITES;
   font_init();
   // font_load(font_min);
-  font_load(font_ibm);
+  font_norm = font_load(font_ibm);
+  font_color(0, 3);
+  font_sel = font_load(font_ibm);
+  font_set(font_norm);
+
   set_bkg_data(0x66, tiles_TILE_COUNT, tiles_tiles);
-
-  // Sound
-  NR52_REG = 0x80;
-  NR51_REG = 0x44;
-  NR50_REG = 0x77;
-
-  play_sound();
 }
 
 void main(void) {
