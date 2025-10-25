@@ -8,13 +8,10 @@
 
 // Include
 #include "pitch.h"
+#include "waveforms.h"
 
 // Include assets
 #include "assets/tiles.h"
-
-// TODO: waveforms.h?
-uint8_t _wave[16] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-                     0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF};
 
 // TODO: Rebuild it
 const char hex[] = "0123456789ABCDEF";
@@ -27,11 +24,13 @@ void printn(uint16_t n) {
 // Variables / Constants
 // -----------------------------------------------------------------------------
 
-uint8_t frequency_index = 12;
-uint8_t previous_frequency_index = 12; // TODO: Remove it?
+uint8_t frequency_index = 45, waveform_index = 0;
+uint8_t previous_frequency_index = 45; // TODO: Remove it?
 bool play = false;
 
 font_t font_norm, font_sel;
+
+uint8_t _wave[16];
 
 // -----------------------------------------------------------------------------
 // Inputs
@@ -60,12 +59,14 @@ void sound_on(void) {
   NR52_REG = 0x80;
   NR51_REG = 0x44;
   NR50_REG = 0x77;
+  set_tile_xy(17, 1, 0x6F);
 }
 
 void sound_off(void) {
   NR52_REG = 0x00;
   NR51_REG = 0x00;
   NR50_REG = 0x00;
+  set_tile_xy(17, 1, 0x6E);
 }
 
 // -----------------------------------------------------------------------------
@@ -83,6 +84,26 @@ void play_sound(void) {
   NR30_REG |= 0x80;
   NR33_REG = (uint8_t)frequencies[frequency_index];
   NR34_REG = ((uint16_t)frequencies[frequency_index] >> 8) | 0x80;
+}
+
+void load_waveform(void) {
+  for (uint8_t i = 0; i < 16; i++)
+    _wave[i] = waveforms[waveform_index * 16 + i];
+}
+
+void osc_draw(uint8_t x, uint8_t y) {
+  set_tile_xy(x, y, 0x62);
+  for (uint8_t i = 0; i < 16; i++) {
+    set_tile_xy(x + 1 + i, y, 0x60);
+    set_tile_xy(x + 1 + i, y + 9, 0x60);
+  }
+  for (uint8_t i = 0; i < 8; i++) {
+    set_tile_xy(x, y + 1 + i, 0x61);
+    set_tile_xy(x + 17, y + 1 + i, 0x61);
+  }
+  set_tile_xy(x + 17, y, 0x63);
+  set_tile_xy(x, y + 9, 0x64);
+  set_tile_xy(x + 17, y + 9, 0x65);
 }
 
 uint8_t _get_osc_tile(uint8_t aIndex) {
@@ -107,7 +128,7 @@ uint8_t _get_osc_tile(uint8_t aIndex) {
   }
 }
 
-void draw_osc(void) {
+void osc_update(uint8_t x, uint8_t y) {
   uint8_t fS, eS;
   uint8_t index;
   for (uint8_t i = 0; i < 16; i++) {
@@ -125,12 +146,12 @@ void draw_osc(void) {
       } else if (eS == (j * 2 + 1)) {
         index |= 0b0001;
       }
-      set_tile_xy(2 + i, 9 - j, _get_osc_tile(index));
+      set_tile_xy(x + 1 + i, y + 8 - j, _get_osc_tile(index));
     }
   }
 }
 
-void plot_osc(uint8_t x, uint8_t y) {
+void osc_plot(uint8_t x, uint8_t y) {
   gotoxy(x, y);
   for (uint8_t i = 0; i < 16; i++) {
     printn(_wave[i]);
@@ -139,37 +160,16 @@ void plot_osc(uint8_t x, uint8_t y) {
   }
 }
 
-void draw(void) {
-  set_tile_xy(1, 1, 0x62);
-  for (uint8_t i = 0; i < 16; i++) {
-    set_tile_xy(2 + i, 1, 0x60);
-    set_tile_xy(2 + i, 10, 0x60);
-  }
-  for (uint8_t i = 0; i < 8; i++) {
-    set_tile_xy(1, 2 + i, 0x61);
-    set_tile_xy(18, 2 + i, 0x61);
-  }
-  set_tile_xy(18, 1, 0x63);
-  set_tile_xy(1, 10, 0x64);
-  set_tile_xy(18, 10, 0x65);
-  draw_osc();
-
-  // TODO
-  gotoxy(2, 11);
-  printf(pitch_class[frequency_index % 12]);
-  printf("%d  ", octaves[(uint8_t)(frequency_index / 12)]);
-  printf("%d", frequencies[frequency_index]);
-}
+void draw(void) { osc_draw(1, 2); }
 
 void update(void) {
-  draw_osc();
-  plot_osc(2, 14);
+  osc_update(1, 2);
+  osc_plot(2, 13);
 
   // TODO
-  gotoxy(2, 11);
+  gotoxy(2, 1);
   printf(pitch_class[frequency_index % 12]);
-  printf("%d  ", octaves[(uint8_t)(frequency_index / 12)]);
-  printf("%d", frequencies[frequency_index]);
+  printf("%d", octaves[(uint8_t)(frequency_index / 12)]);
 
   if (!(frequency_index == previous_frequency_index)) {
     play_sound();
@@ -180,18 +180,20 @@ void check_inputs(void) {
   update_keys();
 
   // Pitch
-  if (key_ticked(J_RIGHT)) {
-    if (frequency_index < 71)
-      frequency_index++;
-  } else if (key_ticked(J_LEFT)) {
-    if (frequency_index > 0)
-      frequency_index--;
-  } else if (key_ticked(J_UP)) {
-    if (frequency_index < 71 - 12)
-      frequency_index += 12;
-  } else if (key_ticked(J_DOWN)) {
-    if (frequency_index > 11)
-      frequency_index -= 12;
+  if (key_pressed(J_A)) {
+    if (key_ticked(J_RIGHT)) {
+      if (frequency_index < 71)
+        frequency_index++;
+    } else if (key_ticked(J_LEFT)) {
+      if (frequency_index > 0)
+        frequency_index--;
+    } else if (key_ticked(J_UP)) {
+      if (frequency_index < 71 - 12)
+        frequency_index += 12;
+    } else if (key_ticked(J_DOWN)) {
+      if (frequency_index > 11)
+        frequency_index -= 12;
+    }
   }
 
   // Start / stop play
@@ -215,8 +217,8 @@ void init(void) {
   font_init();
   // font_load(font_min);
   font_norm = font_load(font_ibm);
-  font_color(0, 3);
-  font_sel = font_load(font_ibm);
+  // font_color(0, 3);
+  // font_sel = font_load(font_ibm);
   font_set(font_norm);
 
   set_bkg_data(0x66, tiles_TILE_COUNT, tiles_tiles);
@@ -226,8 +228,14 @@ void main(void) {
   init();
   draw();
 
+  // Disable sound on startup.
+  sound_off();
+  // Load the default waveform.
+  load_waveform();
+
   while (1) {
     check_inputs();
     update();
+    vsync();
   }
 }
