@@ -14,6 +14,7 @@
 #include "waveforms.h"
 
 // Include assets
+#include "assets/logo.h"
 #include "assets/tiles.h"
 
 // TODO: Rebuild it
@@ -214,7 +215,22 @@ void check_inputs(void) {
   }
 }
 
-void init(void) {
+void show_logo(void) {
+  gotoxy(6, 4);
+  printf("DummyOSC");
+
+  // Logo
+  set_bkg_tiles(5, 5, logo_WIDTH / 8, logo_HEIGHT / 8, logo_map);
+
+  gotoxy(5, 13);
+  printf("by  VEC2PT");
+
+  vsync();
+  delay(2200);
+  cls();
+}
+
+void setup(void) {
   DISPLAY_ON;
   HIDE_WIN;
   SHOW_BKG;
@@ -231,10 +247,13 @@ void init(void) {
   font_load(font_ibm);
 
   set_bkg_data(0x66, tiles_TILE_COUNT, tiles_tiles);
+  set_bkg_data(0x66 + tiles_TILE_COUNT, logo_TILE_COUNT, logo_tiles);
+
+  show_logo();
 }
 
 void main(void) {
-  init();
+  setup();
   osc_draw(OSC_X, OSC_Y);
 
   // Disable sound on startup.
