@@ -25,10 +25,7 @@ void printn(uint16_t n) {
 // -----------------------------------------------------------------------------
 
 uint8_t frequency_index = 45, waveform_index = 0;
-uint8_t previous_frequency_index = 45; // TODO: Remove it?
 bool play = false;
-
-font_t font_norm, font_sel;
 
 uint8_t _wave[16];
 
@@ -235,11 +232,7 @@ void init(void) {
   }
 
   font_init();
-  // font_load(font_min);
-  font_norm = font_load(font_ibm);
-  // font_color(0, 3);
-  // font_sel = font_load(font_ibm);
-  font_set(font_norm);
+  font_load(font_ibm);
 
   set_bkg_data(0x66, tiles_TILE_COUNT, tiles_tiles);
 }
