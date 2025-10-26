@@ -158,6 +158,9 @@ void osc_plot(uint8_t x, uint8_t y) {
     if (i == 7)
       gotoxy(x, y + 1);
   }
+
+  gotoxy(x, y - 1);
+  printf("%d", waveform_index);
 }
 
 void draw(void) { osc_draw(1, 2); }
@@ -175,16 +178,31 @@ void update(void) {
 void check_inputs(void) {
   update_keys();
 
+  if (!key_pressed(J_A)) {
+    if (key_ticked(J_UP)) {
+      if (waveform_index == WAVEFORMS_COUNT - 1)
+        waveform_index = 0;
+      else
+        waveform_index++;
+    } else if (key_ticked(J_DOWN)) {
+      if (waveform_index == 0)
+        waveform_index = WAVEFORMS_COUNT - 1;
+      else
+        waveform_index--;
+    }
+    load_waveform();
+  }
+
   // Pitch
   if (key_pressed(J_A)) {
     if (key_ticked(J_RIGHT)) {
-      if (frequency_index < 71)
+      if (frequency_index < FREQUENCIES_COUNT - 1)
         frequency_index++;
     } else if (key_ticked(J_LEFT)) {
       if (frequency_index > 0)
         frequency_index--;
     } else if (key_ticked(J_UP)) {
-      if (frequency_index < 71 - 12)
+      if (frequency_index < FREQUENCIES_COUNT - 12)
         frequency_index += 12;
     } else if (key_ticked(J_DOWN)) {
       if (frequency_index > 11)
