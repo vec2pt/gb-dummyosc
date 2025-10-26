@@ -27,8 +27,6 @@ void printn(uint16_t n) {
 uint8_t frequency_index = 45, waveform_index = 0;
 bool play = false;
 
-uint8_t _wave[16];
-
 // -----------------------------------------------------------------------------
 // Inputs
 // -----------------------------------------------------------------------------
@@ -76,16 +74,11 @@ void play_sound(void) __interrupt {
   NR32_REG = 0x20;
 
   for (uint8_t i = 0; i < 16; i++)
-    AUD3WAVE[i] = _wave[i];
+    AUD3WAVE[i] = waveforms[waveform_index * 16 + i];
 
   NR30_REG |= 0x80;
   NR33_REG = (uint8_t)frequencies[frequency_index];
   NR34_REG = ((uint16_t)frequencies[frequency_index] >> 8) | 0x80;
-}
-
-void load_waveform(void) {
-  for (uint8_t i = 0; i < 16; i++)
-    _wave[i] = waveforms[waveform_index * 16 + i];
 }
 
 void osc_draw(uint8_t x, uint8_t y) {
@@ -129,8 +122,8 @@ void osc_update(uint8_t x, uint8_t y) {
   uint8_t fS, eS;
   uint8_t index;
   for (uint8_t i = 0; i < 16; i++) {
-    fS = _wave[i] >> 4;
-    eS = _wave[i] & 0x0F;
+    fS = waveforms[waveform_index * 16 + i] >> 4;
+    eS = waveforms[waveform_index * 16 + i] & 0x0F;
     for (int8_t j = 0; j < 8; j++) {
       index = 0b0000;
       if (fS == j * 2) {
@@ -155,9 +148,6 @@ void osc_plot(uint8_t x, uint8_t y) {
     if (i == 7)
       gotoxy(x, y + 1);
   }
-
-  gotoxy(x, y - 1);
-  printf("%d", waveform_index);
 }
 
 void draw(void) { osc_draw(1, 2); }
@@ -187,7 +177,6 @@ void check_inputs(void) {
       else
         waveform_index--;
     }
-    load_waveform();
   }
 
   // Pitch
@@ -243,8 +232,6 @@ void main(void) {
 
   // Disable sound on startup.
   sound_off();
-  // Load the default waveform.
-  load_waveform();
 
   while (1) {
     check_inputs();
