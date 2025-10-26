@@ -74,7 +74,7 @@ void sound_off(void) {
 // TODO: Rebuild it!!!
 // -----------------------------------------------------------------------------
 
-void play_sound(void) {
+void play_sound(void) __interrupt {
   NR30_REG = 0x00;
   NR32_REG = 0x20;
 
@@ -170,10 +170,6 @@ void update(void) {
   gotoxy(2, 1);
   printf(pitch_class[frequency_index % 12]);
   printf("%d", octaves[(uint8_t)(frequency_index / 12)]);
-
-  if (!(frequency_index == previous_frequency_index)) {
-    play_sound();
-  }
 }
 
 void check_inputs(void) {
@@ -201,7 +197,6 @@ void check_inputs(void) {
     play = !play;
     if (play) {
       sound_on();
-      play_sound();
     } else {
       sound_off();
     }
@@ -214,6 +209,13 @@ void init(void) {
   SHOW_BKG;
   HIDE_SPRITES;
   // SHOW_SPRITES;
+
+  __critical {
+    TMA_REG = 0xC0u, TAC_REG = 0x07u;
+    add_TIM(play_sound);
+    set_interrupts(VBL_IFLAG | TIM_IFLAG);
+  }
+
   font_init();
   // font_load(font_min);
   font_norm = font_load(font_ibm);
