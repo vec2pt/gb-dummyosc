@@ -1,10 +1,13 @@
 #include <gb/gb.h>
 #include <gbdk/console.h>
 #include <gbdk/font.h>
-#include <rand.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+
+// TODO:
+// User interface for selecting waveform shape.
+// Waveform editor (AUD3WAVE).
 
 // Include
 #include "pitch.h"
@@ -23,6 +26,11 @@ void printn(uint16_t n) {
 // -----------------------------------------------------------------------------
 // Variables / Constants
 // -----------------------------------------------------------------------------
+
+#define VERSION "v0.1.0"
+
+#define OSC_X 1
+#define OSC_Y 2
 
 uint8_t frequency_index = 45, waveform_index = 0;
 bool play = false;
@@ -66,7 +74,6 @@ void sound_off(void) {
 
 // -----------------------------------------------------------------------------
 // main
-// TODO: Rebuild it!!!
 // -----------------------------------------------------------------------------
 
 void play_sound(void) __interrupt {
@@ -94,6 +101,9 @@ void osc_draw(uint8_t x, uint8_t y) {
   set_tile_xy(x + 17, y, 0x63);
   set_tile_xy(x, y + 9, 0x64);
   set_tile_xy(x + 17, y + 9, 0x65);
+
+  gotoxy(0, 17);
+  printf(VERSION);
 }
 
 uint8_t _get_osc_tile(uint8_t aIndex) {
@@ -144,19 +154,16 @@ void osc_update(uint8_t x, uint8_t y) {
 void osc_plot(uint8_t x, uint8_t y) {
   gotoxy(x, y);
   for (uint8_t i = 0; i < 16; i++) {
-    printn(_wave[i]);
+    printn(waveforms[waveform_index * 16 + i]);
     if (i == 7)
       gotoxy(x, y + 1);
   }
 }
 
-void draw(void) { osc_draw(1, 2); }
-
 void update(void) {
-  osc_update(1, 2);
+  osc_update(OSC_X, OSC_Y);
   osc_plot(2, 13);
 
-  // TODO
   gotoxy(2, 1);
   printf(pitch_class[frequency_index % 12]);
   printf("%d", octaves[(uint8_t)(frequency_index / 12)]);
@@ -228,7 +235,7 @@ void init(void) {
 
 void main(void) {
   init();
-  draw();
+  osc_draw(OSC_X, OSC_Y);
 
   // Disable sound on startup.
   sound_off();
