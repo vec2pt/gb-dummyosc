@@ -173,6 +173,7 @@ void update(void) {
 void check_inputs(void) {
   update_keys();
 
+  // Waveform
   if (!key_pressed(J_A)) {
     if (key_ticked(J_UP)) {
       if (waveform_index == WAVEFORMS_COUNT - 1)
@@ -205,7 +206,7 @@ void check_inputs(void) {
   }
 
   // Start / stop play
-  else if (key_ticked(J_START)) {
+  if (key_ticked(J_START)) {
     play = !play;
     if (play) {
       sound_on();
