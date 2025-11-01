@@ -17,11 +17,10 @@
 #include "assets/logo.h"
 #include "assets/tiles.h"
 
-// TODO: Rebuild it
 const char hex[] = "0123456789ABCDEF";
-void printn(uint16_t n) {
-  printf("%c", hex[0x000Fu & (n >> 4u)]);
-  printf("%c", hex[0x000Fu & (n)]);
+void printn(uint8_t num) {
+  printf("%c", hex[0x0F & (num >> 4)]);
+  printf("%c", hex[0x0F & num]);
 }
 
 // -----------------------------------------------------------------------------
