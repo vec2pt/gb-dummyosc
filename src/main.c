@@ -34,6 +34,7 @@ void printn(uint16_t n) {
 #define OSC_Y 2
 
 uint8_t frequency_index = 45, waveform_index = 0;
+uint16_t period_value;
 bool play = false;
 
 // -----------------------------------------------------------------------------
@@ -77,16 +78,19 @@ void sound_off(void) {
 // main
 // -----------------------------------------------------------------------------
 
-void play_sound(void) __interrupt {
-  NR30_REG = 0x00;
-  NR32_REG = 0x20;
+void play_isr(void) {
+  NR30_REG = 0;
 
   for (uint8_t i = 0; i < 16; i++)
     AUD3WAVE[i] = waveforms[waveform_index * 16 + i];
 
-  NR30_REG |= 0x80;
-  NR33_REG = (uint8_t)frequencies[frequency_index];
-  NR34_REG = ((uint16_t)frequencies[frequency_index] >> 8) | 0x80;
+  NR30_REG = 0x80;
+  NR31_REG = 0xFE;
+  NR32_REG = 0x20;
+
+  period_value = frequencies[frequency_index];
+  NR33_REG = period_value & 0xFF;
+  NR34_REG = 0xC0 | (period_value >> 8);
 }
 
 void osc_draw(uint8_t x, uint8_t y) {
@@ -232,21 +236,17 @@ void show_logo(void) {
 }
 
 void setup(void) {
-  DISPLAY_ON;
-  HIDE_WIN;
-  SHOW_BKG;
-  HIDE_SPRITES;
-  // SHOW_SPRITES;
-
   __critical {
-    TMA_REG = 0xC0u, TAC_REG = 0x07u;
-    add_TIM(play_sound);
+    TMA_REG = 0xC0, TAC_REG = 0x07;
+    add_TIM(play_isr);
     set_interrupts(VBL_IFLAG | TIM_IFLAG);
   }
 
+  // Font
   font_init();
   font_load(font_ibm);
 
+  // Tiles
   set_bkg_data(0x66, tiles_TILE_COUNT, tiles_tiles);
   set_bkg_data(0x66 + tiles_TILE_COUNT, logo_TILE_COUNT, logo_tiles);
 
