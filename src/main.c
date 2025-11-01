@@ -28,12 +28,14 @@ void printn(uint16_t n) {
 // Variables / Constants
 // -----------------------------------------------------------------------------
 
-#define VERSION "v0.1.0"
+#define VERSION "v0.1.1"
 
 #define OSC_X 1
 #define OSC_Y 2
 
-uint8_t frequency_index = 45, waveform_index = 0;
+// Current and previous indexes should be different at initialization.
+uint8_t frequency_index = 45, frequency_previous_index = 44;
+uint8_t waveform_index = 0, waveform_previous_index = 1;
 uint16_t period_value;
 bool play = false;
 
@@ -166,18 +168,23 @@ void osc_plot(uint8_t x, uint8_t y) {
 }
 
 void update(void) {
-  osc_update(OSC_X, OSC_Y);
-  osc_plot(2, 13);
+  if (waveform_index != waveform_previous_index) {
+    osc_update(OSC_X, OSC_Y);
+    osc_plot(2, 13);
+  }
 
-  gotoxy(2, 1);
-  printf(pitch_class[frequency_index % 12]);
-  printf("%d", octaves[(uint8_t)(frequency_index / 12)]);
+  if (frequency_index != frequency_previous_index) {
+    gotoxy(2, 1);
+    printf(pitch_class[frequency_index % 12]);
+    printf("%d", octaves[(uint8_t)(frequency_index / 12)]);
+  }
 }
 
 void check_inputs(void) {
   update_keys();
 
   // Waveform
+  waveform_previous_index = waveform_index;
   if (!key_pressed(J_A)) {
     if (key_ticked(J_UP)) {
       if (waveform_index == WAVEFORMS_COUNT - 1)
@@ -193,6 +200,7 @@ void check_inputs(void) {
   }
 
   // Pitch
+  frequency_previous_index = frequency_index;
   if (key_pressed(J_A)) {
     if (key_ticked(J_RIGHT)) {
       if (frequency_index < FREQUENCIES_COUNT - 1)
@@ -212,11 +220,7 @@ void check_inputs(void) {
   // Start / stop play
   if (key_ticked(J_START)) {
     play = !play;
-    if (play) {
-      sound_on();
-    } else {
-      sound_off();
-    }
+    (play) ? sound_on() : sound_off();
   }
 }
 
