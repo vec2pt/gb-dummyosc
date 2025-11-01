@@ -232,7 +232,7 @@ void show_logo(void) {
   set_bkg_tiles(5, 5, logo_WIDTH / 8, logo_HEIGHT / 8, logo_map);
 
   gotoxy(5, 13);
-  printf("by  VEC2PT");
+  printf("by  vec2pt");
 
   vsync();
   delay(2200);
