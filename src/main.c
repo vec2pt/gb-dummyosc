@@ -259,7 +259,10 @@ void setup(void) {
 
 void main(void) {
   setup();
+
+  // Draw osc
   osc_draw(OSC_X, OSC_Y);
+  update();
 
   // Disable sound on startup.
   sound_off();
