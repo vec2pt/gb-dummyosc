@@ -1,11 +1,8 @@
-
 # DummyOSC (Game Boy ROM)
 
-<!--
 <p align="center">
 <img src="doc/gb-dummyosc-00.png" alt="gb-dummyosc title image."/>
 </p>
--->
 
 Simple oscillator for Game Boy with the ability to select waveform and pitch.
 
