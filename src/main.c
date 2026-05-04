@@ -30,6 +30,7 @@ void printn(uint8_t num) {
 // -----------------------------------------------------------------------------
 
 #define VERSION "v0.1.1"
+#define DISPLAY_LOGO true
 
 #define OSC_X 1
 #define OSC_Y 2
@@ -256,9 +257,10 @@ void setup(void) {
 
   // Tiles
   set_bkg_data(0x66, tiles_TILE_COUNT, tiles_tiles);
+#if DISPLAY_LOGO
   set_bkg_data(0x66 + tiles_TILE_COUNT, logo_TILE_COUNT, logo_tiles);
-
   show_logo();
+#endif
 }
 
 void main(void) {
