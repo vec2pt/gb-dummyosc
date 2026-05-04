@@ -1,9 +1,11 @@
 #include <gb/gb.h>
+#include <gb/hardware.h>
 #include <gbdk/console.h>
 #include <gbdk/font.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 // TODO:
 // User interface for selecting waveform shape.
@@ -61,6 +63,8 @@ uint8_t key_released(uint8_t aKey) {
 // Sound controle
 // -----------------------------------------------------------------------------
 
+#define AUD3SIZE 16
+
 void sound_on(void) {
   NR52_REG = 0x80;
   NR51_REG = 0x44;
@@ -82,8 +86,8 @@ void sound_off(void) {
 void play_isr(void) {
   NR30_REG = 0;
 
-  for (uint8_t i = 0; i < 16; i++)
-    AUD3WAVE[i] = waveforms[waveform_index * 16 + i];
+  // TODO: Maybe it would be better to use a loop?
+  memcpy(AUD3WAVE, &waveforms[waveform_index * AUD3SIZE], AUD3SIZE);
 
   NR30_REG = 0x80;
   NR31_REG = 0xFE;
@@ -137,9 +141,9 @@ uint8_t _get_osc_tile(uint8_t aIndex) {
 void osc_update(uint8_t x, uint8_t y) {
   uint8_t fS, eS;
   uint8_t index;
-  for (uint8_t i = 0; i < 16; i++) {
-    fS = waveforms[waveform_index * 16 + i] >> 4;
-    eS = waveforms[waveform_index * 16 + i] & 0x0F;
+  for (uint8_t i = 0; i < AUD3SIZE; i++) {
+    fS = waveforms[waveform_index * AUD3SIZE + i] >> 4;
+    eS = waveforms[waveform_index * AUD3SIZE + i] & 0x0F;
     for (int8_t j = 0; j < 8; j++) {
       index = 0b0000;
       if (fS == j * 2) {
@@ -158,11 +162,12 @@ void osc_update(uint8_t x, uint8_t y) {
 }
 
 void osc_plot(uint8_t x, uint8_t y) {
+  const unsigned char *wave = &waveforms[waveform_index * AUD3SIZE];
   gotoxy(x, y);
-  for (uint8_t i = 0; i < 16; i++) {
-    printn(waveforms[waveform_index * 16 + i]);
-    if (i == 7)
+  for (uint8_t i = 0; i != AUD3SIZE; i++) {
+    if (i == AUD3SIZE / 2)
       gotoxy(x, y + 1);
+    printn(*wave++);
   }
 }
 
