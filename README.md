@@ -25,7 +25,7 @@ Simple oscillator for Game Boy with the ability to select waveform and pitch.
 ![gb-dummyosc-03.png](doc/gb-dummyosc-03.png)
 ![gb-dummyosc-04.png](doc/gb-dummyosc-04.png)
 
-## Special Thanks
+## Acknowledgments
 
 - [GBDK-2020](https://github.com/gbdk-2020/gbdk-2020)
 - [Pan Docs](https://gbdev.io/pandocs/)
